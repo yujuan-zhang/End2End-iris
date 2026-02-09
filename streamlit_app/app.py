@@ -90,11 +90,22 @@ species_list = sorted(df["species"].unique().tolist())
 
 # ========== 页面标题 ==========
 st.title("Iris Data Pipeline Dashboard")
-st.caption(
-    "End-to-end pipeline: PostgreSQL + dbt + Airflow + Python + MLflow + Streamlit | "
-    "[Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) (150 samples, 3 species) | "
-    "[GitHub](https://github.com/yujuan-zhang/End2End-iris)"
+st.markdown(
+    "End-to-end data pipeline on the "
+    "[Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) "
+    "(150 samples, 3 species) &nbsp;|&nbsp; "
+    "[GitHub](https://github.com/yujuan-zhang/End2End-iris)",
+    unsafe_allow_html=True,
 )
+with st.expander("Pipeline Components", expanded=False):
+    st.markdown("""| Component | Role |
+|---|---|
+| **PostgreSQL** | Data storage |
+| **dbt** | Data transformation (staging → marts) + testing |
+| **Airflow** | Pipeline orchestration |
+| **Python** | Static reports (CSV + PNG) |
+| **MLflow** | ML experiment tracking |
+| **Streamlit** | Interactive dashboard (this page) |""")
 
 # Tab 样式：更大更醒目
 st.markdown("""
