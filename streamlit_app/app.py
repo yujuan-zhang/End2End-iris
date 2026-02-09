@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import os
-import psycopg2
+from pathlib import Path
 import plotly.express as px
 import plotly.graph_objects as go
 import plotly.figure_factory as ff
@@ -18,27 +18,70 @@ st.set_page_config(page_title="Iris Dashboard", layout="wide")
 COLORS = {"setosa": "#2ecc71", "versicolor": "#3498db", "virginica": "#e74c3c"}
 COLOR_LIST = ["#2ecc71", "#3498db", "#e74c3c"]
 
-# 连接数据库
-@st.cache_resource
-def get_connection():
-    return psycopg2.connect(
-        host="db", port=5432,
-        user=os.environ.get("POSTGRES_USER", "myuser"),
-        password=os.environ.get("POSTGRES_PASSWORD", "mypass"),
-        dbname=os.environ.get("POSTGRES_DB", "mydb")
-    )
 
 @st.cache_data
 def load_data():
-    conn = get_connection()
-    df = pd.read_sql("SELECT * FROM fct_measurements", conn)
-    df_summary = pd.read_sql("SELECT * FROM mart_species_summary", conn)
+    """Load data from PostgreSQL (Docker) or CSV (Streamlit Cloud)."""
+    # Try database first (Docker environment)
+    try:
+        import psycopg2
+        conn = psycopg2.connect(
+            host="db", port=5432,
+            user=os.environ.get("POSTGRES_USER", "myuser"),
+            password=os.environ.get("POSTGRES_PASSWORD", "mypass"),
+            dbname=os.environ.get("POSTGRES_DB", "mydb")
+        )
+        df = pd.read_sql("SELECT * FROM fct_measurements", conn)
+        df_summary = pd.read_sql("SELECT * FROM mart_species_summary", conn)
+        conn.close()
+        return df, df_summary
+    except Exception:
+        pass
+
+    # Fallback: read from CSV (Streamlit Cloud)
+    csv_path = Path(__file__).parent.parent / "data" / "iris.csv"
+    raw = pd.read_csv(csv_path)
+
+    # Replicate dbt staging: round + size_category
+    for col in ["sepal_length", "sepal_width", "petal_length", "petal_width"]:
+        raw[col] = raw[col].round(1)
+    raw["size_category"] = pd.cut(
+        raw["sepal_length"],
+        bins=[0, 5.0, 6.5, float("inf")],
+        labels=["small", "medium", "large"],
+        right=False
+    )
+    raw["measurement_id"] = range(1, len(raw) + 1)
+
+    # Replicate dbt fct_measurements: add computed fields
+    raw["sepal_area"] = (raw["sepal_length"] * raw["sepal_width"]).round(1)
+    raw["petal_area"] = (raw["petal_length"] * raw["petal_width"]).round(1)
+    df = raw
+
+    # Replicate dbt mart_species_summary
+    df_summary = (
+        df.groupby(["species", "size_category"], observed=True)
+        .agg(
+            total=("measurement_id", "count"),
+            avg_sepal_length=("sepal_length", "mean"),
+            avg_sepal_width=("sepal_width", "mean"),
+            avg_petal_length=("petal_length", "mean"),
+            avg_petal_width=("petal_width", "mean"),
+            avg_sepal_area=("sepal_area", "mean"),
+            avg_petal_area=("petal_area", "mean"),
+        )
+        .round(1)
+        .reset_index()
+        .sort_values(["species", "size_category"])
+    )
+
     return df, df_summary
+
 
 try:
     df, df_summary = load_data()
 except Exception as e:
-    st.error(f"Database connection failed: {e}")
+    st.error(f"Failed to load data: {e}")
     st.stop()
 
 feature_cols = ["sepal_length", "sepal_width", "petal_length", "petal_width",
