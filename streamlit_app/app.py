@@ -88,12 +88,26 @@ feature_cols = ["sepal_length", "sepal_width", "petal_length", "petal_width",
                 "sepal_area", "petal_area"]
 species_list = sorted(df["species"].unique().tolist())
 
+# ========== 页面标题 ==========
+st.title("Iris Data Pipeline Dashboard")
+st.markdown("""
+End-to-end data pipeline built with **Docker**: PostgreSQL → dbt → Airflow → MLflow → Streamlit.
+
+This dashboard is the visualization layer of the pipeline, showing interactive data exploration
+and machine learning analysis on the classic [Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set)
+(150 samples, 3 species, 4 measurements).
+
+**Pipeline architecture:**
+`iris.csv → PostgreSQL → dbt (staging → marts) → Airflow orchestration → MLflow tracking → Streamlit dashboard`
+""")
+
+st.divider()
+
 # ========== 页面导航 ==========
 tab1, tab2 = st.tabs(["Data Explorer", "ML Analysis"])
 
 # ========== Tab 1: 数据探索 ==========
 with tab1:
-    st.title("Iris Data Explorer")
 
     st.header("1. Summary Table")
     st.dataframe(df_summary, use_container_width=True)
