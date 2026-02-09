@@ -90,26 +90,11 @@ species_list = sorted(df["species"].unique().tolist())
 
 # ========== 页面标题 ==========
 st.title("Iris Data Pipeline Dashboard")
-st.markdown("""
-End-to-end data pipeline built with **Docker**: PostgreSQL + dbt + Airflow + MLflow + Python + Streamlit.
-
-This dashboard is the visualization layer of the pipeline, showing interactive data exploration
-and machine learning analysis on the classic [Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set)
-(150 samples, 3 species, 4 measurements).
-
-| Component | Role |
-|---|---|
-| **PostgreSQL** | Data storage |
-| **dbt** | Data transformation (staging → marts) + testing |
-| **Airflow** | Pipeline orchestration |
-| **Python** | Static reports (CSV + PNG) |
-| **MLflow** | ML experiment tracking |
-| **Streamlit** | Interactive dashboard (this page) |
-
-[GitHub Repository](https://github.com/yujuan-zhang/End2End-iris) | Contact: yujuan.zhang418@gmail.com
-""")
-
-st.divider()
+st.caption(
+    "End-to-end pipeline: PostgreSQL + dbt + Airflow + Python + MLflow + Streamlit | "
+    "[Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) (150 samples, 3 species) | "
+    "[GitHub](https://github.com/yujuan-zhang/End2End-iris)"
+)
 
 # Tab 样式：更大更醒目
 st.markdown("""
