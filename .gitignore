@@ -1,0 +1,20 @@
+# Environment secrets
+.env
+
+# dbt
+dbt_project/target/
+dbt_project/dbt_packages/
+dbt_project/logs/
+
+# Airflow
+airflow/logs/
+
+# Python
+__pycache__/
+*.pyc
+
+# Output files
+results/
+
+# macOS
+.DS_Store

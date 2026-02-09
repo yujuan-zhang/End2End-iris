@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  # --- Staging 层 ---
+  - name: stg_iris
+    description: "清洗后的鸢尾花数据，统一格式 + 尺寸分类"
+    columns:
+      - name: measurement_id
+        tests:
+          - not_null
+          - unique
+      - name: species
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['setosa', 'versicolor', 'virginica']
+      - name: size_category
+        tests:
+          - not_null
+          - accepted_values:
+              values: ['small', 'medium', 'large']
+
+  # --- Marts 层 ---
+  - name: dim_species
+    description: "维度表：品种基本信息"
+    columns:
+      - name: species
+        tests:
+          - not_null
+          - unique
+
+  - name: fct_measurements
+    description: "事实表：每条测量记录 + 计算字段"
+    columns:
+      - name: measurement_id
+        tests:
+          - not_null
+          - unique
+      - name: sepal_area
+        tests:
+          - not_null
+      - name: petal_area
+        tests:
+          - not_null
+
+  - name: mart_species_summary
+    description: "指标层：按品种和尺寸汇总，给 BI 用的稳定接口"
+    columns:
+      - name: total
+        tests:
+          - not_null

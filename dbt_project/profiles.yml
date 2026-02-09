@@ -1,0 +1,11 @@
+dbt_iris:
+  target: dev
+  outputs:
+    dev:
+      type: postgres
+      host: db
+      port: 5432
+      user: "{{ env_var('POSTGRES_USER', 'myuser') }}"
+      pass: "{{ env_var('POSTGRES_PASSWORD', 'mypass') }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'mydb') }}"
+      schema: public

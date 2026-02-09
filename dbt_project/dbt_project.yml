@@ -1,0 +1,10 @@
+name: 'dbt_iris'
+version: '1.0.0'
+
+profile: 'dbt_iris'
+
+model-paths: ["models"]
+
+models:
+  dbt_iris:
+    +materialized: table

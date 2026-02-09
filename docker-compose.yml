@@ -1,0 +1,97 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 5432:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./data:/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  dbt:
+    image: ghcr.io/dbt-labs/dbt-postgres:1.7.4
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./dbt_project:/usr/app
+    working_dir: /usr/app
+    entrypoint: ["sh", "-c", "dbt run --profiles-dir /usr/app && dbt test --profiles-dir /usr/app"]
+
+  python_visual:
+    build: ./python_visual
+    depends_on:
+      dbt:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./results:/results
+
+  streamlit:
+    build: ./streamlit_app
+    depends_on:
+      dbt:
+        condition: service_completed_successfully
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 8501:8501
+
+  mlflow:
+    image: python:3.11-slim
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - mlflow_data:/mlflow
+    ports:
+      - 5050:5000
+    command: bash -c "pip install mlflow==2.10.0 -q && mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:///mlflow/mlflow.db --default-artifact-root mlflow-artifacts:/ --serve-artifacts --artifacts-destination /mlflow/artifacts"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:5000/')\""]
+      interval: 15s
+      timeout: 10s
+      retries: 20
+      start_period: 60s
+
+  airflow:
+    build: ./airflow
+    depends_on:
+      db:
+        condition: service_healthy
+      mlflow:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: SequentialExecutor
+      AIRFLOW__CORE__LOAD_EXAMPLES: 'false'
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
+      - ./dbt_project:/opt/dbt
+      - ./python_visual:/opt/python_visual
+      - ./ml:/opt/ml
+      - ./results:/results
+    ports:
+      - 8080:8080
+    command: bash -c "airflow db migrate && airflow users create --username ${AIRFLOW_ADMIN_USER} --password ${AIRFLOW_ADMIN_PASSWORD} --firstname Admin --lastname Admin --role Admin --email admin@local.com 2>/dev/null; airflow webserver -D && airflow scheduler"
+
+volumes:
+  postgres_data:
+  mlflow_data:
