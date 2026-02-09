@@ -91,9 +91,9 @@ species_list = sorted(df["species"].unique().tolist())
 # ========== 页面标题 ==========
 st.title("Iris Data Pipeline Dashboard")
 st.markdown(
-    "End-to-end data pipeline on the "
+    "End-to-end data pipeline that ingests, transforms, tests, and visualizes the "
     "[Iris dataset](https://en.wikipedia.org/wiki/Iris_flower_data_set) "
-    "(150 samples, 3 species) &nbsp;|&nbsp; "
+    "(150 samples, 3 species), then trains a Random Forest classifier to predict species. &nbsp;|&nbsp; "
     "[GitHub](https://github.com/yujuan-zhang/End2End-iris)",
     unsafe_allow_html=True,
 )
