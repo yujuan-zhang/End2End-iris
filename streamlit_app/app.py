@@ -111,6 +111,27 @@ and machine learning analysis on the classic [Iris dataset](https://en.wikipedia
 
 st.divider()
 
+# Tab 样式：更大更醒目
+st.markdown("""
+<style>
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 50px;
+        padding: 10px 24px;
+        font-size: 18px;
+        font-weight: 600;
+        border-radius: 8px 8px 0 0;
+        background-color: #f0f2f6;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #3498db !important;
+        color: white !important;
+    }
+</style>
+""", unsafe_allow_html=True)
+
 # ========== 页面导航 ==========
 tab1, tab2 = st.tabs(["Data Explorer", "ML Analysis"])
 
