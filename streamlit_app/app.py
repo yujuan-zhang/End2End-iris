@@ -105,6 +105,8 @@ and machine learning analysis on the classic [Iris dataset](https://en.wikipedia
 | **Python** | Static reports (CSV + PNG) |
 | **MLflow** | ML experiment tracking |
 | **Streamlit** | Interactive dashboard (this page) |
+
+[GitHub Repository](https://github.com/yujuan-zhang/End2End-iris) | Contact: yujuan.zhang418@gmail.com
 """)
 
 st.divider()
